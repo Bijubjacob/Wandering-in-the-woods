@@ -1,7 +1,7 @@
 # This file contains the main game logic
 
 import random
-from .models import PlayerGroup, GameState
+from models import PlayerGroup, GameState
 
 
 def create_game(width, height, start_positions):
