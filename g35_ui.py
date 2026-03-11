@@ -16,7 +16,10 @@
 # -----------------------------------------------------------
 
 import tkinter as tk
+import os
+import pygame
 from engine import create_game, step
+from src.game import Game
 
 
 def launch_g35(root):
@@ -24,25 +27,34 @@ def launch_g35(root):
     # create new window
     window = tk.Toplevel(root)
     window.title("Grades 3-5 Mode")
+    window.geometry("900x600")
+
+    # creating frame for pygame window
+    pygame_frame = tk.Frame(window, width=600, height=600)
+    pygame_frame.pack(side=tk.LEFT, padx=10, pady=10)
+
+    # Telling pygame to use the tkinter frame for its display
+    os.environ["SDL_WINDOWID"] = str(pygame_frame.winfo_id())
+    os.environ["SDL_VIDEODRIVER"] = "windib"
 
     # -----------------------------------------------------------
     # USER INPUT SETTINGS
     # -----------------------------------------------------------
 
-    tk.Label(window, text="Grid Width").pack()
+    tk.Label(window, text="Grid Width").pack(side=tk.RIGHT)
     width_entry = tk.Entry(window)
     width_entry.insert(0, "8")
-    width_entry.pack()
+    width_entry.pack(side=tk.RIGHT)
 
-    tk.Label(window, text="Grid Height").pack()
+    tk.Label(window, text="Grid Height").pack(side=tk.RIGHT)
     height_entry = tk.Entry(window)
     height_entry.insert(0, "8")
-    height_entry.pack()
+    height_entry.pack(side=tk.RIGHT)
 
-    tk.Label(window, text="Number of Players (2-4)").pack()
+    tk.Label(window, text="Number of Players (2-4)").pack(side=tk.RIGHT)
     player_entry = tk.Entry(window)
     player_entry.insert(0, "2")
-    player_entry.pack()
+    player_entry.pack(side=tk.RIGHT)
 
     info_label = tk.Label(window, text="")
     info_label.pack(pady=5)
@@ -79,6 +91,14 @@ def launch_g35(root):
 
         # create the game
         state = create_game(width, height, start_positions)
+         
+        pygame.init()
+        screen = pygame.display.set_mode((600, 600))
+
+        game = Game(screen, rows=height, cols=width)
+        game.run()
+        pygame.quit()
+
 
         # run simulation until players meet
         while not state.finished:

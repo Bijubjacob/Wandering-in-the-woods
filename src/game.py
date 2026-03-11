@@ -1,23 +1,23 @@
 import pygame
-from grid import Grid
-from simulation import Simulation
-from stats import Stats
-from ui import UI
-from audio import AudioManager
+from src.grid import Grid
+from src.simulation import Simulation
+from src.stats import Stats
+from src.ui import UI
+from src.audio import AudioManager
 
 
 class Game:
-    def __init__(self):
-        self.screen_width = 500
-        self.screen_height = 650
-        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+    def __init__(self, screen, rows=5, cols=5):
+        # self.screen_width = 500
+        # self.screen_height = 650
+        self.screen = screen
         pygame.display.set_caption("Wandering in the Woods")
 
         self.clock = pygame.time.Clock()
         self.ui = UI()
         self.audio = AudioManager()
 
-        self.grid = Grid(rows=5, cols=5, cell_size=100, margin_top=100)
+        self.grid = Grid(rows, cols, cell_size=100, margin_top=100)
         self.simulation = Simulation(self.grid)
         self.stats = Stats()
 
@@ -98,39 +98,19 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
 
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == pygame.K_r:
-                        self.reset_game()
+                # elif event.type == pygame.KEYDOWN:
+                #     if event.key == pygame.K_r:
+                #         self.reset_game()
 
-                    elif not self.simulation.met:
-                        # Player 1 - WASD
-                        if event.key == pygame.K_w:
-                            self.simulation.players[0].move(-1, 0, self.grid)
-                            self.check_meeting()
-                        elif event.key == pygame.K_s:
-                            self.simulation.players[0].move(1, 0, self.grid)
-                            self.check_meeting()
-                        elif event.key == pygame.K_a:
-                            self.simulation.players[0].move(0, -1, self.grid)
-                            self.check_meeting()
-                        elif event.key == pygame.K_d:
-                            self.simulation.players[0].move(0, 1, self.grid)
-                            self.check_meeting()
+            if not self.simulation.met:
+                self.simulation.players[0].move_random(self.grid)
+                self.check_meeting()
+                self.simulation.players[1].move_random(self.grid)
+                self.check_meeting()
+            else:
+                running = False
 
-                        # Player 2 - Arrow Keys
-                        elif event.key == pygame.K_UP:
-                            self.simulation.players[1].move(-1, 0, self.grid)
-                            self.check_meeting()
-                        elif event.key == pygame.K_DOWN:
-                            self.simulation.players[1].move(1, 0, self.grid)
-                            self.check_meeting()
-                        elif event.key == pygame.K_LEFT:
-                            self.simulation.players[1].move(0, -1, self.grid)
-                            self.check_meeting()
-                        elif event.key == pygame.K_RIGHT:
-                            self.simulation.players[1].move(0, 1, self.grid)
-                            self.check_meeting()
-
-            self.update()
+            #self.update()
             self.draw()
-            self.clock.tick(60)
+            # Change FPS here
+            self.clock.tick(3)
