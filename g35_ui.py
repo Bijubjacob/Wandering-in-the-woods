@@ -90,22 +90,22 @@ def launch_g35(root):
             start_positions.append((x, y))
 
         # create the game
-        state = create_game(width, height, start_positions)
+        # state = create_game(width, height, start_positions)
          
         pygame.init()
         screen = pygame.display.set_mode((600, 600))
 
-        game = Game(screen, rows=height, cols=width)
-        game.run()
+        game = Game(screen, rows=height, cols=width, players=players, starting_positions=start_positions)
+        run_time = game.run()
         pygame.quit()
 
 
         # run simulation until players meet
-        while not state.finished:
-            step(state)
+        # while not state.finished:
+        #     step(state)
 
         # record the result
-        runs.append(state.time_steps)
+        runs.append(run_time)
 
         update_stats()
 

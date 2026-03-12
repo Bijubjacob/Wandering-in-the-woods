@@ -2,12 +2,15 @@ from src.player import Player
 
 
 class Simulation:
-    def __init__(self, grid):
+    def __init__(self, grid, players, starting_positions=None):
         self.grid = grid
-        self.players = [
-            Player("Player 1", 0, 0, (255, 100, 100)),
-            Player("Player 2", grid.rows - 1, grid.cols - 1, (100, 100, 255)),
-        ]
+        self.players = []
+        if starting_positions:
+            for i, (row, col) in enumerate(starting_positions):
+                self.players.append(Player(f"Player {i + 1}", row, col, (i * 50, i * 10, 255 - i * 50)))
+        else:
+            for i in range(players):
+                self.players.append(Player(f"Player {i + 1}", 0, 0, (255, 100, 100)))
         self.met = False
         self.winner_message = ""
 
