@@ -280,9 +280,9 @@ def launch_g35(root):
         stats_label.config(
             text=(
                 f"Runs: {len(runs)}\n"
-                f"Shortest: {shortest}\n"
-                f"Longest: {longest}\n"
-                f"Average: {average:.2f}"
+                f"Shortest: {shortest:.2f} s\n"
+                f"Longest: {longest:.2f} s\n"
+                f"Average: {average:.2f} s"
             )
         )
 

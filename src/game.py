@@ -189,6 +189,8 @@ class Game:
 
     def run(self):
         running = True
+        run_start_time = pygame.time.get_ticks()
+        run_duration_seconds = 0.0
         self.audio.start_background()
 
         try:
@@ -208,6 +210,7 @@ class Game:
                         self.move_player(player)
                         if len(self.simulation.players) == 1:
                             self.meet_time = pygame.time.get_ticks()
+                            run_duration_seconds = max(0.0, (self.meet_time - run_start_time) / 1000.0)
                             self.final_meet_time = self.meet_time
                             break
 
@@ -224,4 +227,4 @@ class Game:
         finally:
             self.audio.stop_background()
 
-        return self.meet_time
+        return run_duration_seconds
