@@ -1,7 +1,7 @@
 import tkinter as tk
-from modes.k2_ui import launch_k2
-from modes.g35_ui import launch_g35
-from modes.g68_ui import launch_g68
+from k2_ui import launch_k2
+from g35_ui import launch_g35
+from g68_ui import launch_g68
 
 
 def main():

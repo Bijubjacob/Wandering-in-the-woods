@@ -7,7 +7,15 @@ from src.audio import AudioManager
 
 
 class Game:
-    def __init__(self, screen, rows=5, cols=5, players=2, starting_positions=None):
+    def __init__(
+        self,
+        screen,
+        rows=5,
+        cols=5,
+        players=2,
+        starting_positions=None,
+        movement_algorithm="random",
+    ):
         # self.screen_width = 500
         # self.screen_height = 650
         self.screen = screen
@@ -17,12 +25,39 @@ class Game:
         self.ui = UI()
         self.audio = AudioManager()
 
-        self.grid = Grid(rows, cols, cell_size=100, margin_top=100)
+        self.screen_width, self.screen_height = self.screen.get_size()
+        self.grid_margin_top = 100
+        self.grid_margin_bottom = 80
+
+        max_grid_width = max(1, self.screen_width)
+        max_grid_height = max(1, self.screen_height - self.grid_margin_top - self.grid_margin_bottom)
+        cell_size = max(4, min(max_grid_width // cols, max_grid_height // rows))
+        grid_width = cols * cell_size
+        margin_left = max(0, (self.screen_width - grid_width) // 2)
+
+        self.grid = Grid(
+            rows,
+            cols,
+            cell_size=cell_size,
+            margin_top=self.grid_margin_top,
+            margin_left=margin_left,
+        )
         self.simulation = Simulation(self.grid, players, starting_positions)
         self.stats = Stats()
 
         self.meet_time = None
         self.background_color = (34, 139, 34)
+        self.movement_algorithm = movement_algorithm
+
+    def move_player(self, player):
+        if self.movement_algorithm == "clockwise":
+            player.move_clockwise(self.grid)
+        elif self.movement_algorithm == "zigzag":
+            player.move_zigzag(self.grid)
+        elif self.movement_algorithm == "spiral":
+            player.move_spiral(self.grid)
+        else:
+            player.move_random(self.grid)
 
     def reset_game(self):
         self.simulation.reset()
@@ -42,8 +77,13 @@ class Game:
                     ):
                         # Create a new player that has the same position as the players that met
                         new_player = self.simulation.players[i]
+                        merged_group = (
+                            self.simulation.players[i].group_animal_types
+                            + self.simulation.players[j].group_animal_types
+                        )
                         new_player.name = f"{self.simulation.players[i].name} & {self.simulation.players[j].name}"
                         new_player.color = (255, 255, 255)
+                        new_player.group_animal_types = merged_group
 
                         # Remove the players that met
                         del self.simulation.players[j]
@@ -82,11 +122,11 @@ class Game:
     def draw(self):
         self.screen.fill(self.background_color)
 
-        self.ui.draw_text(self.screen, "Wandering in the Woods", 110, 20)
+        self.ui.draw_text(self.screen, "Wandering in the Woods", 20, 20)
         if len(self.simulation.players) >= 1:
             self.ui.draw_text(
                 self.screen,
-                f"Player 1 moves: {self.simulation.players[0].move_count}",
+                f"{self.simulation.players[0].name} moves: {self.simulation.players[0].move_count}",
                 20,
                 60,
                 small=True,
@@ -94,8 +134,8 @@ class Game:
         if len(self.simulation.players) >= 2:
             self.ui.draw_text(
                 self.screen,
-                f"Player 2 moves: {self.simulation.players[1].move_count}",
-                250,
+                f"{self.simulation.players[1].name} moves: {self.simulation.players[1].move_count}",
+                max(20, self.screen_width // 2),
                 60,
                 small=True,
             )
@@ -103,7 +143,7 @@ class Game:
             self.ui.draw_text(
                 self.screen,
                 f"Grouped moves: {self.simulation.players[0].move_count}",
-                250,
+                max(20, self.screen_width // 2),
                 60,
                 small=True,
             )
@@ -126,8 +166,8 @@ class Game:
             self.ui.draw_text(
                 self.screen,
                 self.simulation.winner_message,
-                120,
-                580,
+                20,
+                self.screen_height - 40,
                 (255, 255, 0),
             )
 
@@ -150,7 +190,7 @@ class Game:
                 for player in list(self.simulation.players):
                     if player not in self.simulation.players:
                         continue
-                    player.move_random(self.grid)
+                    self.move_player(player)
                     self.check_meeting()
                     if len(self.simulation.players) == 1:
                         self.meet_time = pygame.time.get_ticks()
