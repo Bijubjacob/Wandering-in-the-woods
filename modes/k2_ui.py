@@ -11,7 +11,7 @@ def launch_k2(root):
 
 	window = tk.Toplevel(root)
 	window.title("K-2 Mode")
-	window.geometry("1000x700")
+	window.geometry("1000x920")
 
 	main_frame = tk.Frame(window)
 	main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -123,6 +123,21 @@ def launch_k2(root):
 	size_entry.bind("<FocusOut>", clamp_size_entry)
 
 	narrate_async(narration_text)
+
+	# --- Reflection Questions ---
+	quiz_frame = tk.LabelFrame(window, text="Reflection Questions", padx=10, pady=8)
+	quiz_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+
+	quiz_questions = [
+		"Q1: Which animal moves the fastest?",
+		"Q2: Is there a pattern to the movement of the animals?",
+		"Q3: How does the grid size affect the number of steps the animals take to meet?",
+	]
+	for i, q_text in enumerate(quiz_questions):
+		tk.Label(quiz_frame, text=q_text, anchor="w", justify=tk.LEFT).grid(
+			row=i, column=0, sticky="w", pady=(6, 0)
+		)
+	quiz_frame.grid_columnconfigure(0, weight=1)
 
 # For testing mode
 if __name__ == "__main__":

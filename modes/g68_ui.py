@@ -1,6 +1,8 @@
 import tkinter as tk
 import os
 import pygame
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from src.game import Game
 from src.narrator import narrate_async
 
@@ -10,7 +12,8 @@ def launch_g68(root):
 
     window = tk.Toplevel(root)
     window.title("Grades 6-8 Mode")
-    window.geometry("1100x700")
+    window.geometry("1380x1080")
+    window.minsize(1260, 960)
 
     main_frame = tk.Frame(window)
     main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
@@ -21,6 +24,22 @@ def launch_g68(root):
 
     controls_frame = tk.LabelFrame(main_frame, text="Simulation Controls", padx=10, pady=10)
     controls_frame.pack(side=tk.RIGHT, fill=tk.Y)
+
+    lower_frame = tk.Frame(window)
+    lower_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+
+    chart_outer = tk.LabelFrame(lower_frame, text="Average Run Time by Grid Size", padx=8, pady=6)
+    chart_outer.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+
+    quiz_frame = tk.LabelFrame(lower_frame, text="Reflection Questions", padx=12, pady=10, width=420)
+    quiz_frame.pack(side=tk.RIGHT, fill=tk.BOTH)
+    quiz_frame.pack_propagate(False)
+
+    fig = Figure(figsize=(11.2, 5.8), dpi=96)
+    ax = fig.add_subplot(111)
+    fig.subplots_adjust(left=0.08, right=0.98, bottom=0.16, top=0.92)
+    chart_canvas_widget = FigureCanvasTkAgg(fig, master=chart_outer)
+    chart_canvas_widget.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     window.update_idletasks()
     os.environ["SDL_WINDOWID"] = str(pygame_frame.winfo_id())
@@ -91,6 +110,42 @@ def launch_g68(root):
     controls_frame.grid_columnconfigure(0, weight=1)
 
     runs = []
+    grid_size_data = {}  # key: "WxH", value: list of run times for that grid size
+
+    def update_chart():
+        ax.clear()
+        ax.set_xlabel("Grid Size (W\u00d7H)", fontsize=9)
+        ax.set_ylabel("Avg Time (s)", fontsize=9)
+        ax.tick_params(labelsize=8)
+        if grid_size_data:
+            labels = sorted(
+                grid_size_data.keys(),
+                key=lambda s: int(s.split("x")[0]) * int(s.split("x")[1]),
+            )
+            avgs = [sum(grid_size_data[k]) / len(grid_size_data[k]) for k in labels]
+            bars = ax.bar(labels, avgs, color="#3f7a58", edgecolor="#2f5d45", width=0.55)
+            for bar, avg in zip(bars, avgs):
+                ax.text(
+                    bar.get_x() + bar.get_width() / 2,
+                    bar.get_height() + max(avgs) * 0.02,
+                    f"{avg:.2f}s",
+                    ha="center",
+                    va="bottom",
+                    fontsize=8,
+                )
+        else:
+            ax.text(
+                0.5, 0.5,
+                "Run a simulation to see data",
+                transform=ax.transAxes,
+                ha="center",
+                va="center",
+                color="#9ca3af",
+                fontsize=10,
+            )
+        chart_canvas_widget.draw()
+
+    update_chart()
 
     def get_simulation_surface_size():
         window.update_idletasks()
@@ -315,6 +370,10 @@ def launch_g68(root):
         runs.append(run_time)
         update_stats()
 
+        key = f"{width}x{height}"
+        grid_size_data.setdefault(key, []).append(run_time)
+        update_chart()
+
     run_button = tk.Button(
         controls_frame,
         text="Run Simulation",
@@ -322,10 +381,17 @@ def launch_g68(root):
     )
     run_button.grid(row=14, column=0, sticky="ew", pady=(4, 6))
 
+    def reset_all():
+        runs.clear()
+        grid_size_data.clear()
+        update_stats()
+        update_chart()
+        info_label.config(text="")
+
     reset_button = tk.Button(
         controls_frame,
         text="Reset Statistics",
-        command=lambda: (runs.clear(), update_stats(), info_label.config(text="")),
+        command=reset_all,
     )
     reset_button.grid(row=15, column=0, sticky="ew")
 
@@ -345,6 +411,31 @@ def launch_g68(root):
     update_start_fields()
     start_placement()
     narrate_async(narration_text)
+
+    tk.Label(
+        quiz_frame,
+        justify=tk.LEFT,
+        anchor="w",
+        wraplength=360,
+    ).grid(row=0, column=0, sticky="ew", pady=(0, 10))
+
+    quiz_questions = [
+        "Q1: What is the relationship between grid size and average run time for each movement algorithm?",
+        "Q2: What is the relationship between grid size and average run time for each movement algorithm?",
+        "Q3: Which movement algorithm performed best on larger grids, and why do you think that is?",
+    ]
+    for i, q_text in enumerate(quiz_questions):
+        tk.Label(
+            quiz_frame,
+            text=q_text,
+            anchor="w",
+            justify=tk.LEFT,
+            wraplength=360,
+            font=("Segoe UI", 11),
+        ).grid(
+            row=i + 1, column=0, sticky="ew", pady=(8, 0)
+        )
+    quiz_frame.grid_columnconfigure(0, weight=1)
 
 
 if __name__ == "__main__":

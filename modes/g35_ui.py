@@ -29,7 +29,7 @@ def launch_g35(root):
     # create new window
     window = tk.Toplevel(root)
     window.title("Grades 3-5 Mode")
-    window.geometry("1100x700")
+    window.geometry("1100x920")
 
     # Main split layout: left for simulation, right for controls.
     main_frame = tk.Frame(window)
@@ -370,6 +370,21 @@ def launch_g35(root):
     update_start_fields()
     start_placement()
     narrate_async(narration_text)
+
+    # --- Reflection Questions ---
+    quiz_frame = tk.LabelFrame(window, text="Reflection Questions", padx=10, pady=8)
+    quiz_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+
+    quiz_questions = [
+        "Q1: What happens to the movement speed when animals meet?",
+        "Q2: As the area of the grid increases, what happens to the average run time?",
+        "Q3: How does the number of animals affect the average simulation time?",
+    ]
+    for i, q_text in enumerate(quiz_questions):
+        tk.Label(quiz_frame, text=q_text, anchor="w", justify=tk.LEFT).grid(
+            row=i, column=0, sticky="w", pady=(6, 0)
+        )
+    quiz_frame.grid_columnconfigure(0, weight=1)
 
 
 # For testing g35 mode independently
