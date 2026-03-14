@@ -51,23 +51,27 @@ Player 2 starts in the bottom-right corner
 Wandering-in-the-woods
 │
 ├── assets
-│   ├── fonts
-│   ├── images
-│   └── sounds
+│   ├── audio
+│   │   ├── background.ogg
+│   │   └── meet.flac
+│   └── images
 │
 ├── docs
+├── modes
+│   ├── k2_ui.py
+│   ├── g35_ui.py
+│   └── g68_ui.py
 │
 ├── src
-│   ├── main.py
+│   ├── audio.py
 │   ├── game.py
 │   ├── grid.py
 │   ├── player.py
 │   ├── simulation.py
 │   ├── stats.py
-│   ├── ui.py
-│   └── audio.py
+│   └── ui.py
 │
-├── tests
+├── main.py
 ├── requirements.txt
 └── README.md
 ⚙ Installation
@@ -101,7 +105,7 @@ pip install -r requirements.txt
 
 Run the program with:
 
-python3 src/main.py
+python3 main.py
 
 A game window will open and players can begin moving around the forest grid.
 

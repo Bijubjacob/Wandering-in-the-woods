@@ -46,6 +46,8 @@ class Game:
         self.stats = Stats()
 
         self.meet_time = None
+        self.final_meet_time = None
+        self.final_clap_hold_ms = 2500
         self.background_color = (34, 139, 34)
         self.movement_algorithm = movement_algorithm
 
@@ -62,6 +64,7 @@ class Game:
     def reset_game(self):
         self.simulation.reset()
         self.meet_time = None
+        self.final_meet_time = None
 
     def check_meeting(self):
         # While players share the same cell, create a new player that has the same position as the players that met, and remove the players that met. 
@@ -92,8 +95,11 @@ class Game:
                         # Add the new player to the simulation
                         self.simulation.players.append(new_player)
 
-                        # Play meet sound
-                        self.audio.play_meet_sound()
+                        # Play different cues for intermediate vs final meeting.
+                        if len(self.simulation.players) == 1:
+                            self.audio.play_all_met()
+                        else:
+                            self.audio.play_partial_meet()
 
                         is_players_met = True
                         break
@@ -175,32 +181,40 @@ class Game:
 
     def run(self):
         running = True
+        self.audio.start_background()
 
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-
-                # elif event.type == pygame.KEYDOWN:
-                #     if event.key == pygame.K_r:
-                #         self.reset_game()
-
-            
-            if len(self.simulation.players) > 1:
-                for player in list(self.simulation.players):
-                    if player not in self.simulation.players:
-                        continue
-                    self.move_player(player)
-                    self.check_meeting()
-                    if len(self.simulation.players) == 1:
-                        self.meet_time = pygame.time.get_ticks()
+        try:
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
                         running = False
-                        break
 
-            #self.update()
-            self.draw()
+                    # elif event.type == pygame.KEYDOWN:
+                    #     if event.key == pygame.K_r:
+                    #         self.reset_game()
 
-            # Change FPS here
-            self.clock.tick(3)
+                if len(self.simulation.players) > 1:
+                    for player in list(self.simulation.players):
+                        if player not in self.simulation.players:
+                            continue
+                        self.move_player(player)
+                        self.check_meeting()
+                        if len(self.simulation.players) == 1:
+                            self.meet_time = pygame.time.get_ticks()
+                            self.final_meet_time = self.meet_time
+                            break
+
+                if self.final_meet_time is not None:
+                    elapsed = pygame.time.get_ticks() - self.final_meet_time
+                    if elapsed >= self.final_clap_hold_ms:
+                        running = False
+
+                #self.update()
+                self.draw()
+
+                # Change FPS here
+                self.clock.tick(3)
+        finally:
+            self.audio.stop_background()
 
         return self.meet_time
