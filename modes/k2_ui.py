@@ -53,7 +53,9 @@ def launch_k2(root):
 
         pygame.init()
         
-        if not is_frozen():
+        if not is_frozen():   
+                window.update_idletasks()
+                window.update()
                 os.environ["SDL_WINDOWID"] = str(pygame_frame.winfo_id())
                 os.environ["SDL_VIDEODRIVER"] = "windib"
                 
