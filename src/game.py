@@ -1,7 +1,6 @@
 import pygame
 from src.grid import Grid
 from src.simulation import Simulation
-from src.stats import Stats
 from src.ui import UI
 from src.audio import AudioManager
 
@@ -43,7 +42,6 @@ class Game:
             margin_left=margin_left,
         )
         self.simulation = Simulation(self.grid, players, starting_positions)
-        self.stats = Stats()
 
         self.meet_time = None
         self.final_meet_time = None

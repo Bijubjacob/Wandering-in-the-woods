@@ -86,17 +86,17 @@ cd Wandering-in-the-woods
 
 Create a virtual environment:
 
-python3 -m venv venv
+python3 -m venv .venv
 
 Activate it:
 
 Mac / Linux
 
-source venv/bin/activate
+source .venv/bin/activate
 
 Windows
 
-venv\Scripts\activate
+.venv\Scripts\activate
 
 Install dependencies:
 
