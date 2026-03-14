@@ -11,13 +11,28 @@ class Game:
         # self.screen_width = 500
         # self.screen_height = 650
         self.screen = screen
+        pygame.mixer.init()
         pygame.display.set_caption("Wandering in the Woods")
 
         self.clock = pygame.time.Clock()
         self.ui = UI()
         self.audio = AudioManager()
 
-        self.grid = Grid(rows, cols, cell_size=100, margin_top=100)
+        
+        # Compute cell size to fit in the available space
+        screen_w, screen_h = self.screen.get_size()
+
+        margin_top = 100          # space for title + move counters
+        margin_bottom = 80        # space for winner text near bottom (adjust if needed)
+        margin_side = 20          # left/right padding so lines aren’t flush to edge
+
+        available_w = max(1, screen_w - 2 * margin_side)
+        available_h = max(1, screen_h - margin_top - margin_bottom)
+
+        # choose a cell size that allows whole grid to fit
+        cell_size = max(5, min(available_w // cols, available_h // rows))
+
+        self.grid = Grid(rows, cols, cell_size=cell_size, margin_top=margin_top)
         self.simulation = Simulation(self.grid, players, starting_positions)
         self.stats = Stats()
 
@@ -136,6 +151,9 @@ class Game:
     def run(self):
         running = True
 
+        # Start ambient music
+        self.audio.start_background()
+
         while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -153,12 +171,17 @@ class Game:
                     player.move_random(self.grid)
                     self.check_meeting()
                     if len(self.simulation.players) == 1:
-                        self.meet_time = pygame.time.get_ticks()
-                        running = False
+                        if self.meet_time is None:
+                            self.meet_time = pygame.time.get_ticks()
+                            self.audio.stop_background()
                         break
 
             #self.update()
             self.draw()
+
+            if self.simulation.met and self.meet_time:
+                if pygame.time.get_ticks() - self.meet_time >= 1500:
+                    running = False
 
             # Change FPS here
             self.clock.tick(3)

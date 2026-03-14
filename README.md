@@ -37,28 +37,23 @@ Simulation experiments
 
 Students can explore how movement strategies affect the time it takes for players to meet.
 
-🎮 Controls
-Key	Action
-W A S D	Move Player 1
-Arrow Keys	Move Player 2
-R	Reset the game
-Close Window	Exit the program
-
-Player 1 starts in the top-left corner
-Player 2 starts in the bottom-right corner
-
 🏗 Project Structure
 Wandering-in-the-woods
 │
-├── assets
-│   ├── fonts
-│   ├── images
-│   └── sounds
-│
-├── docs
+├── build
+|
+├── dist
+│   └── main.exe (exetuable file that you can use)
+|
+├── modes
+│   ├── k2_ui.py
+│   ├── g35_ui.py
+│   └── g68_ui.py
 │
 ├── src
-│   ├── main.py
+|   ├── assets.py
+|   |     └── background.ogg
+|   |     └── meet.flac
 │   ├── game.py
 │   ├── grid.py
 │   ├── player.py
@@ -67,9 +62,13 @@ Wandering-in-the-woods
 │   ├── ui.py
 │   └── audio.py
 │
-├── tests
+├── engine.py
+├── main.py
+├── main.spec
+├── models.py
 ├── requirements.txt
 └── README.md
+
 ⚙ Installation
 
 Clone the repository:
@@ -80,54 +79,19 @@ Navigate into the folder:
 
 cd Wandering-in-the-woods
 
-Create a virtual environment:
+Navigate to the "dist" folder
 
-python3 -m venv venv
+Double click the "main.exe" file
 
-Activate it:
+A menu will open for you to select a game mode (K-2, 3-5, 6-8)
 
-Mac / Linux
+Select which game mode you want to play
 
-source venv/bin/activate
+Maximize each window for the best user experience
 
-Windows
-
-venv\Scripts\activate
-
-Install dependencies:
-
-pip install -r requirements.txt
-▶ Running the Game
-
-Run the program with:
-
-python3 src/main.py
-
-A game window will open and players can begin moving around the forest grid.
-
-🧮 Algorithm
-
-Each player moves on the grid according to user input.
-
-Movement is limited to four directions:
-
-UP
-DOWN
-LEFT
-RIGHT
-
-The game checks after each move whether both players occupy the same grid cell.
-
-If they do:
-
-players have met → simulation ends
 🚀 Future Improvements
 
 Possible enhancements include:
-
-Main menu with grade level selection
-
-Random wandering simulation mode
 
 Data graphs for meeting times
 
@@ -140,6 +104,11 @@ Forest background graphics
 Sound effects and narration
 
 👨‍💻 Authors
+
+Collin Cimaroli
+Carlos Fuentes
+Alexis Granados
+Biju Jacob
 
 Software Engineering Project
 Lewis University

@@ -68,20 +68,20 @@ def step(state):
         return state
 
     # move every group
-    for group in state.groups:
+    group = random.choice(state.groups)
 
-        # get all possible moves for this group
-        moves = get_valid_moves(
-            group.position,
-            state.width,
-            state.height
-        )
+    # get all possible moves for this group
+    moves = get_valid_moves(
+        group.position,
+        state.width,
+        state.height
+    )
 
-        # choose one move randomly
-        group.position = random.choice(moves)
+    # choose one move randomly
+    group.position = random.choice(moves)
 
-        # add one step to this group
-        group.steps += 1
+    # add one step to this group
+    group.steps += 1
 
     # increase total game time
     state.time_steps += 1
@@ -89,6 +89,18 @@ def step(state):
     # check if any groups landed on the same cell
     merge_groups(state)
 
+    return state
+
+
+def step_many(state, n=200):
+    """
+    Perform up to n steps (or until finished).
+    Needed for speeding up simulations.
+    """
+    for _ in range(n):
+        if state.finished:
+            break
+        step(state)
     return state
 
 
@@ -145,10 +157,7 @@ def merge_groups(state):
     state.groups = new_groups
 
     # if only one group remains, everyone has met
-    if len(state.groups) == 1:
-        state.finished = True
+
     state.groups = new_groups
+    state.finished = (len(state.groups) == 1)
 
-    if len(state.groups) == 1:
-
-        state.finished = True
