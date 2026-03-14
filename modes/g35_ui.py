@@ -30,6 +30,10 @@ def launch_g35(root):
     window = tk.Toplevel(root)
     window.title("Grades 3-5 Mode")
     window.geometry("1100x920")
+    try:
+        window.state("zoomed")
+    except tk.TclError:
+        window.geometry(f"{window.winfo_screenwidth()}x{window.winfo_screenheight()}+0+0")
 
     # Main split layout: left for simulation, right for controls.
     main_frame = tk.Frame(window)
@@ -248,9 +252,16 @@ def launch_g35(root):
     def update_start_fields(_event=None):
         clamp_dimension_entry(width_entry)
         clamp_dimension_entry(height_entry)
+        width, height = get_grid_dimensions()
         active_players = get_player_count()
-        if len(start_positions) > active_players:
-            del start_positions[active_players:]
+        filtered_positions = []
+        for x, y in start_positions:
+            if 0 <= x < width and 0 <= y < height and (x, y) not in filtered_positions:
+                filtered_positions.append((x, y))
+
+        del start_positions[:]
+        start_positions.extend(filtered_positions[:active_players])
+
         cell, x0, y0 = draw_placement_grid()
         draw_players(cell, x0, y0)
 
@@ -299,7 +310,14 @@ def launch_g35(root):
         sim_width, sim_height = get_simulation_surface_size()
         screen = pygame.display.set_mode((sim_width, sim_height))
 
-        game = Game(screen, rows=height, cols=width, players=players, starting_positions=start_positions)
+        simulation_positions = [(y, x) for x, y in start_positions]
+        game = Game(
+            screen,
+            rows=height,
+            cols=width,
+            players=players,
+            starting_positions=simulation_positions,
+        )
         run_time = game.run()
         pygame.quit()
 

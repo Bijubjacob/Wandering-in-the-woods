@@ -9,6 +9,10 @@ def main():
     root.title("Wandering Woods")
     root.geometry("860x560")
     root.minsize(760, 500)
+    try:
+        root.state("zoomed")
+    except tk.TclError:
+        root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}+0+0")
     root.configure(bg="#eef4ea")
 
     title_font = ("Segoe UI", 34, "bold")

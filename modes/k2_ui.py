@@ -12,6 +12,10 @@ def launch_k2(root):
 	window = tk.Toplevel(root)
 	window.title("K-2 Mode")
 	window.geometry("1000x920")
+	try:
+		window.state("zoomed")
+	except tk.TclError:
+		window.geometry(f"{window.winfo_screenwidth()}x{window.winfo_screenheight()}+0+0")
 
 	main_frame = tk.Frame(window)
 	main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
