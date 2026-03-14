@@ -2,6 +2,14 @@ import random
 import pygame
 
 
+ANIMAL_SPEEDS = {
+    "rabbit": 1.4,
+    "fox": 1.15,
+    "raccoon": 0.9,
+    "owl": 0.7,
+}
+
+
 class Player:
     def __init__(self, name, row, col, color, animal_type="rabbit"):
         self.name = name
@@ -16,6 +24,16 @@ class Player:
         self.spiral_visited = {(self.row, self.col)}
         self.animal_type = animal_type
         self.group_animal_types = [animal_type]
+        self.move_progress = 0.0
+
+    def get_speed(self):
+        return min(ANIMAL_SPEEDS.get(animal_type, 1.0) for animal_type in self.group_animal_types)
+
+    def get_moves_for_tick(self):
+        self.move_progress += self.get_speed()
+        steps = int(self.move_progress)
+        self.move_progress -= steps
+        return steps
 
     def move(self, d_row, d_col, grid):
         new_row = self.row + d_row
@@ -142,6 +160,7 @@ class Player:
         self.spiral_direction_index = 0
         self.spiral_visited = {(self.row, self.col)}
         self.group_animal_types = [self.animal_type]
+        self.move_progress = 0.0
 
     def draw(self, screen, grid):
         x, y = grid.get_cell_center(self.row, self.col)

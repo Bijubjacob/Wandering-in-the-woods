@@ -52,6 +52,14 @@ class Game:
         self.movement_algorithm = movement_algorithm
 
     def move_player(self, player):
+        steps = player.get_moves_for_tick()
+        for _ in range(steps):
+            self._move_player_one_step(player)
+            self.check_meeting()
+            if len(self.simulation.players) == 1:
+                return
+
+    def _move_player_one_step(self, player):
         if self.movement_algorithm == "clockwise":
             player.move_clockwise(self.grid)
         elif self.movement_algorithm == "zigzag":
@@ -198,7 +206,6 @@ class Game:
                         if player not in self.simulation.players:
                             continue
                         self.move_player(player)
-                        self.check_meeting()
                         if len(self.simulation.players) == 1:
                             self.meet_time = pygame.time.get_ticks()
                             self.final_meet_time = self.meet_time
