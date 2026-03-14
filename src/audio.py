@@ -1,83 +1,100 @@
-import pygame
 import os
 import sys
+import pygame
 
 
-def resource_path(relative_path: str) -> str:
-    """
-    Get absolute path to resource.
-    """
+def resource_path(relative_path):
     if hasattr(sys, "_MEIPASS"):
-        base_path = sys._MEIPASS
-    else:
-        # audio.py is in src/, so go up one level to project root
-        base_path = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-
-    return os.path.join(base_path, relative_path)
+        return os.path.join(sys._MEIPASS, relative_path)
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+    return os.path.join(project_root, relative_path)
 
 
 class AudioManager:
     def __init__(self):
+        self.audio_enabled = False
+        self.background_channel = None
+        self.background_sound = None
+        self.meet_path = None
         self.meet_sound = None
-        self.background_path = None
 
-        assets_dir = resource_path("src/assets")
+        self.partial_meet_start = 0.0
+        self.partial_meet_duration_ms = 1200
+        self.all_met_start = 5.12
 
-        meet_path = os.path.join(assets_dir, "meet.flac")
-        self.background_path = os.path.join(assets_dir, "background.ogg")
+        self._initialize_audio()
 
-        print("AudioManager: assets_dir =", assets_dir)
-        print("AudioManager: meet =", meet_path)
-        print("AudioManager: background =", self.background_path)
-
-        # ---------------------------------
-        # Load meet sound
-        # ---------------------------------
-
+    def _initialize_audio(self):
         try:
             if not pygame.mixer.get_init():
                 pygame.mixer.init()
-
-            self.meet_sound = pygame.mixer.Sound(meet_path)
-            self.meet_sound.set_volume(1.0)
-            print("AudioManager: meet sound loaded")
-
-        except Exception as e:
-            print("AudioManager WARNING: meet sound failed to load")
-            print("Reason:", e)
-            self.meet_sound = None
-
-    # ---------------------------------
-    # Background music
-    # ---------------------------------
-
-    def start_background(self):
-        if not self.background_path:
+            self.audio_enabled = True
+        except pygame.error:
+            self.audio_enabled = False
             return
 
-        try:
-            pygame.mixer.music.load(self.background_path)
-            pygame.mixer.music.set_volume(0.4)
-            pygame.mixer.music.play(loops=-1)
-            print("AudioManager: background music started")
+        background_candidates = [
+            resource_path(os.path.join("assets", "audio", "background.ogg")),
+        ]
+        meet_candidates = [
+            resource_path(os.path.join("assets", "audio", "meet.flac")),
+        ]
 
-        except Exception as e:
-            print("AudioManager WARNING: background music failed")
-            print("Reason:", e)
+        self.background_sound = self._load_sound(background_candidates)
+        self.meet_path = self._first_existing(meet_candidates)
+        if self.meet_path:
+            self.meet_sound = self._load_sound([self.meet_path])
+
+    def _first_existing(self, paths):
+        for path in paths:
+            if os.path.exists(path):
+                return path
+        return None
+
+    def _load_sound(self, paths):
+        for path in paths:
+            if not os.path.exists(path):
+                continue
+            try:
+                return pygame.mixer.Sound(path)
+            except pygame.error:
+                continue
+        return None
+
+    def start_background(self):
+        if not self.audio_enabled or not self.background_sound:
+            return
+        if self.background_channel and self.background_channel.get_busy():
+            return
+
+        self.background_channel = pygame.mixer.Channel(0)
+        self.background_channel.set_volume(0.35)
+        self.background_channel.play(self.background_sound, loops=-1)
 
     def stop_background(self):
+        if self.background_channel:
+            self.background_channel.fadeout(700)
+
+    def _play_meet_segment(self, start_seconds):
+        if not self.audio_enabled or not self.meet_path:
+            return
         try:
-            pygame.mixer.music.fadeout(1000)
-        except Exception:
-            pass
-
-    # ---------------------------------
-    # Meet sound
-    # ---------------------------------
-
-    def play_meet_sound(self):
-        if self.meet_sound:
-            try:
+            pygame.mixer.music.load(self.meet_path)
+            pygame.mixer.music.set_volume(0.9)
+            pygame.mixer.music.play(loops=0, start=start_seconds, fade_ms=80)
+        except pygame.error:
+            if self.meet_sound:
+                self.meet_sound.set_volume(0.9)
                 self.meet_sound.play()
-            except Exception:
-                pass
+
+    def play_partial_meet(self):
+        if not self.audio_enabled:
+            return
+        if self.meet_sound:
+            self.meet_sound.set_volume(0.9)
+            self.meet_sound.play(maxtime=self.partial_meet_duration_ms)
+            return
+        self._play_meet_segment(self.partial_meet_start)
+
+    def play_all_met(self):
+        self._play_meet_segment(self.all_met_start)

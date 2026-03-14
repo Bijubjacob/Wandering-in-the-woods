@@ -1,126 +1,159 @@
-🌲 Wandering in the Woods
+# Wandering in the Woods
 
-Wandering in the Woods is an educational simulation/game built with Python and Pygame.
-The game helps students explore computational thinking, random processes, and grid-based algorithms through an interactive forest wandering scenario.
+Wandering in the Woods is a K-8 educational simulation built with Tkinter + Pygame.
+Students choose a grade-band mode, set grid/player options, place animals on a mini-grid, and run simulations until all players meet.
 
-Players are lost in a forest represented by a grid and must move around until they find each other.
+## What the Program Does Today
 
-This project is designed for K–8 students and includes multiple complexity levels for different grade groups.
+- Launches a main menu with 3 modes: K-2, Grades 3-5, Grades 6-8.
+- Opens the main menu and mode windows in windowed full-screen (maximized).
+- Runs automatic movement simulations (not keyboard-controlled player movement).
+- Tracks run-time statistics in seconds.
+- Plays background audio and meet cues when assets are available.
+- Uses narration text (asynchronous voice output) for each mode.
 
-🎮 Game Overview
+## Mode Breakdown
 
-The forest is represented as a rectangular grid.
+### K-2 Mode
 
-Each player occupies a single cell in the grid.
+- Square grid size input (`N x N`, capped at 15).
+- 2 players start at opposite corners.
+- One-click run simulation flow.
+- Reflection question section at the bottom.
 
-Players cannot see or hear each other until they occupy the same cell.
+### Grades 3-5 Mode
 
-When both players land on the same cell:
+- Rectangular grid (`width`, `height`), each capped at 15.
+- Player count from 2 to 4.
+- Click-to-place starting positions on a mini-grid.
+- Run statistics: runs, shortest, longest, average (seconds).
+- Reflection question section.
 
-🎉 They find each other and the simulation ends.
+### Grades 6-8 Mode
 
-🧠 Educational Concepts
+- Rectangular grid (`width`, `height`), each capped at 15.
+- Player count from 2 to 4.
+- Movement algorithm selection:
+	- Random
+	- Clockwise
+	- Zigzag
+	- Spiral
+- Click-to-place starting positions on a mini-grid.
+- Run statistics in seconds.
+- Dynamic bar chart (matplotlib): x-axis is grid size (`WxH`), y-axis is average run time.
+- Reflection question section with scrolling.
 
-This project demonstrates:
+## Core Simulation Behavior
 
-Computational thinking
+- Players move one cell at a time in cardinal directions.
+- Animal speed multipliers differ by animal type.
+- When players meet in the same cell, they merge into a group.
+- Simulation continues until all players have merged.
 
-Grid-based environments
+## Tech Stack
 
-Algorithmic movement
+- Python 3
+- Tkinter (UI)
+- Pygame (simulation rendering + audio)
+- Matplotlib (Grades 6-8 chart)
 
-Random walks
+## Installation
 
-Data collection
+1. Clone repo:
 
-Simulation experiments
+```bash
+git clone https://github.com/bijubjacob/Wandering-in-the-woods.git
+cd Wandering-in-the-woods
+```
 
-Students can explore how movement strategies affect the time it takes for players to meet.
+2. Create and activate a virtual environment.
 
-🏗 Project Structure
-Wandering-in-the-woods
-│
-├── build
-|
-├── dist
-│   └── main.exe (exetuable file that you can use)
-|
-├── modes
+Windows:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+```
+
+macOS/Linux:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+3. Install dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Run
+
+```bash
+python main.py
+```
+
+## Windows Executable (No Python Required)
+
+If you already have a packaged build, launch:
+
+```text
+dist/WanderingInTheWoods.exe
+```
+
+This executable starts the same Tkinter main menu and mode windows.
+
+## Build the Executable (Maintainers)
+
+`pyinstaller` is a packaging tool used for distribution builds. It is not required to run the project from source.
+
+Install it when needed:
+
+```bash
+pip install pyinstaller
+```
+
+Build command used for this project:
+
+```bash
+python -m PyInstaller --noconfirm --clean --windowed --onefile --name WanderingInTheWoods --add-data "assets;assets" --hidden-import matplotlib.backends.backend_tkagg --hidden-import matplotlib.backends._tkagg main.py
+```
+
+## Project Structure (Current)
+
+```text
+Wandering-in-the-woods/
+├── assets/
+│   ├── audio/
+│   │   ├── background.ogg
+│   │   └── meet.flac
+│   └── images/
+├── docs/
+├── modes/
 │   ├── k2_ui.py
 │   ├── g35_ui.py
 │   └── g68_ui.py
-│
-├── src
-|   ├── assets.py
-|   |     └── background.ogg
-|   |     └── meet.flac
+├── src/
+│   ├── audio.py
 │   ├── game.py
 │   ├── grid.py
+│   ├── narrator.py
 │   ├── player.py
 │   ├── simulation.py
-│   ├── stats.py
-│   ├── ui.py
-│   └── audio.py
-│
-├── engine.py
+│   └── ui.py
 ├── main.py
-├── main.spec
-├── models.py
 ├── requirements.txt
 └── README.md
+```
 
-⚙ Installation
+## Notes
 
-Clone the repository:
+- Audio is optional at runtime; if audio init or asset loading fails, simulation still runs.
+- Narration uses platform speech support when available.
+- `requirements.txt` contains runtime dependencies only.
+- A quick validation command used in development:
 
-git clone https://github.com/bijubjacob/Wandering-in-the-woods.git
-
-Navigate into the folder:
-
-cd Wandering-in-the-woods
-
-Navigate to the "dist" folder
-
-Double click the "main.exe" file
-
-A menu will open for you to select a game mode (K-2, 3-5, 6-8)
-
-Select which game mode you want to play
-
-Maximize each window for the best user experience
-
-🚀 Future Improvements
-
-Possible enhancements include:
-
-Data graphs for meeting times
-
-Experiment mode for grid size comparisons
-
-Character sprites
-
-Forest background graphics
-
-Sound effects and narration
-
-👨‍💻 Authors
-
-Collin Cimaroli
-Carlos Fuentes
-Alexis Granados
-Biju Jacob
-
-Software Engineering Project
-Lewis University
-
-📚 Learning Focus
-
-This project demonstrates concepts from:
-
-Software Engineering
-
-Simulation Modeling
-
-Algorithm Design
-
-Educational Game Development
+```bash
+python -m py_compile main.py modes/*.py src/*.py
+```

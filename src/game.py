@@ -1,13 +1,20 @@
 import pygame
 from src.grid import Grid
 from src.simulation import Simulation
-from src.stats import Stats
 from src.ui import UI
 from src.audio import AudioManager
 
 
 class Game:
-    def __init__(self, screen, rows=5, cols=5, players=2, starting_positions=None):
+    def __init__(
+        self,
+        screen,
+        rows=5,
+        cols=5,
+        players=2,
+        starting_positions=None,
+        movement_algorithm="random",
+    ):
         # self.screen_width = 500
         # self.screen_height = 650
         self.screen = screen
@@ -18,30 +25,53 @@ class Game:
         self.ui = UI()
         self.audio = AudioManager()
 
-        
-        # Compute cell size to fit in the available space
-        screen_w, screen_h = self.screen.get_size()
+        self.screen_width, self.screen_height = self.screen.get_size()
+        self.grid_margin_top = 100
+        self.grid_margin_bottom = 80
 
-        margin_top = 100          # space for title + move counters
-        margin_bottom = 80        # space for winner text near bottom (adjust if needed)
-        margin_side = 20          # left/right padding so lines aren’t flush to edge
+        max_grid_width = max(1, self.screen_width)
+        max_grid_height = max(1, self.screen_height - self.grid_margin_top - self.grid_margin_bottom)
+        cell_size = max(4, min(max_grid_width // cols, max_grid_height // rows))
+        grid_width = cols * cell_size
+        margin_left = max(0, (self.screen_width - grid_width) // 2)
 
-        available_w = max(1, screen_w - 2 * margin_side)
-        available_h = max(1, screen_h - margin_top - margin_bottom)
-
-        # choose a cell size that allows whole grid to fit
-        cell_size = max(5, min(available_w // cols, available_h // rows))
-
-        self.grid = Grid(rows, cols, cell_size=cell_size, margin_top=margin_top)
+        self.grid = Grid(
+            rows,
+            cols,
+            cell_size=cell_size,
+            margin_top=self.grid_margin_top,
+            margin_left=margin_left,
+        )
         self.simulation = Simulation(self.grid, players, starting_positions)
-        self.stats = Stats()
 
         self.meet_time = None
+        self.final_meet_time = None
+        self.final_clap_hold_ms = 2500
         self.background_color = (34, 139, 34)
+        self.movement_algorithm = movement_algorithm
+
+    def move_player(self, player):
+        steps = player.get_moves_for_tick()
+        for _ in range(steps):
+            self._move_player_one_step(player)
+            self.check_meeting()
+            if len(self.simulation.players) == 1:
+                return
+
+    def _move_player_one_step(self, player):
+        if self.movement_algorithm == "clockwise":
+            player.move_clockwise(self.grid)
+        elif self.movement_algorithm == "zigzag":
+            player.move_zigzag(self.grid)
+        elif self.movement_algorithm == "spiral":
+            player.move_spiral(self.grid)
+        else:
+            player.move_random(self.grid)
 
     def reset_game(self):
         self.simulation.reset()
         self.meet_time = None
+        self.final_meet_time = None
 
     def check_meeting(self):
         # While players share the same cell, create a new player that has the same position as the players that met, and remove the players that met. 
@@ -57,8 +87,13 @@ class Game:
                     ):
                         # Create a new player that has the same position as the players that met
                         new_player = self.simulation.players[i]
+                        merged_group = (
+                            self.simulation.players[i].group_animal_types
+                            + self.simulation.players[j].group_animal_types
+                        )
                         new_player.name = f"{self.simulation.players[i].name} & {self.simulation.players[j].name}"
                         new_player.color = (255, 255, 255)
+                        new_player.group_animal_types = merged_group
 
                         # Remove the players that met
                         del self.simulation.players[j]
@@ -67,8 +102,11 @@ class Game:
                         # Add the new player to the simulation
                         self.simulation.players.append(new_player)
 
-                        # Play meet sound
-                        self.audio.play_meet_sound()
+                        # Play different cues for intermediate vs final meeting.
+                        if len(self.simulation.players) == 1:
+                            self.audio.play_all_met()
+                        else:
+                            self.audio.play_partial_meet()
 
                         is_players_met = True
                         break
@@ -97,11 +135,11 @@ class Game:
     def draw(self):
         self.screen.fill(self.background_color)
 
-        self.ui.draw_text(self.screen, "Wandering in the Woods", 110, 20)
+        self.ui.draw_text(self.screen, "Wandering in the Woods", 20, 20)
         if len(self.simulation.players) >= 1:
             self.ui.draw_text(
                 self.screen,
-                f"Player 1 moves: {self.simulation.players[0].move_count}",
+                f"{self.simulation.players[0].name} moves: {self.simulation.players[0].move_count}",
                 20,
                 60,
                 small=True,
@@ -109,8 +147,8 @@ class Game:
         if len(self.simulation.players) >= 2:
             self.ui.draw_text(
                 self.screen,
-                f"Player 2 moves: {self.simulation.players[1].move_count}",
-                250,
+                f"{self.simulation.players[1].name} moves: {self.simulation.players[1].move_count}",
+                max(20, self.screen_width // 2),
                 60,
                 small=True,
             )
@@ -118,7 +156,7 @@ class Game:
             self.ui.draw_text(
                 self.screen,
                 f"Grouped moves: {self.simulation.players[0].move_count}",
-                250,
+                max(20, self.screen_width // 2),
                 60,
                 small=True,
             )
@@ -141,8 +179,8 @@ class Game:
             self.ui.draw_text(
                 self.screen,
                 self.simulation.winner_message,
-                120,
-                580,
+                20,
+                self.screen_height - 40,
                 (255, 255, 0),
             )
 
@@ -150,40 +188,42 @@ class Game:
 
     def run(self):
         running = True
-
-        # Start ambient music
+        run_start_time = pygame.time.get_ticks()
+        run_duration_seconds = 0.0
         self.audio.start_background()
 
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+        try:
+            while running:
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        running = False
 
-                # elif event.type == pygame.KEYDOWN:
-                #     if event.key == pygame.K_r:
-                #         self.reset_game()
+                    # elif event.type == pygame.KEYDOWN:
+                    #     if event.key == pygame.K_r:
+                    #         self.reset_game()
 
-            
-            if len(self.simulation.players) > 1:
-                for player in list(self.simulation.players):
-                    if player not in self.simulation.players:
-                        continue
-                    player.move_random(self.grid)
-                    self.check_meeting()
-                    if len(self.simulation.players) == 1:
-                        if self.meet_time is None:
+                if len(self.simulation.players) > 1:
+                    for player in list(self.simulation.players):
+                        if player not in self.simulation.players:
+                            continue
+                        self.move_player(player)
+                        if len(self.simulation.players) == 1:
                             self.meet_time = pygame.time.get_ticks()
-                            self.audio.stop_background()
-                        break
+                            run_duration_seconds = max(0.0, (self.meet_time - run_start_time) / 1000.0)
+                            self.final_meet_time = self.meet_time
+                            break
 
-            #self.update()
-            self.draw()
+                if self.final_meet_time is not None:
+                    elapsed = pygame.time.get_ticks() - self.final_meet_time
+                    if elapsed >= self.final_clap_hold_ms:
+                        running = False
 
-            if self.simulation.met and self.meet_time:
-                if pygame.time.get_ticks() - self.meet_time >= 1500:
-                    running = False
+                #self.update()
+                self.draw()
 
-            # Change FPS here
-            self.clock.tick(3)
+                # Change FPS here
+                self.clock.tick(3)
+        finally:
+            self.audio.stop_background()
 
-        return self.meet_time
+        return run_duration_seconds
