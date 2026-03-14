@@ -25,21 +25,34 @@ def launch_g68(root):
     controls_frame = tk.LabelFrame(main_frame, text="Simulation Controls", padx=10, pady=10)
     controls_frame.pack(side=tk.RIGHT, fill=tk.Y)
 
-    lower_frame = tk.Frame(window)
-    lower_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
+    lower_pane = tk.PanedWindow(
+        window,
+        orient=tk.HORIZONTAL,
+        sashrelief=tk.RAISED,
+        sashwidth=8,
+        opaqueresize=True,
+    )
+    lower_pane.pack(fill=tk.BOTH, expand=True, padx=10, pady=(0, 10))
 
-    chart_outer = tk.LabelFrame(lower_frame, text="Average Run Time by Grid Size", padx=8, pady=6)
-    chart_outer.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=(0, 10))
+    chart_outer = tk.LabelFrame(lower_pane, text="Average Run Time by Grid Size", padx=8, pady=6)
+    quiz_frame = tk.LabelFrame(lower_pane, text="Reflection Questions", padx=12, pady=10)
 
-    quiz_frame = tk.LabelFrame(lower_frame, text="Reflection Questions", padx=12, pady=10, width=420)
-    quiz_frame.pack(side=tk.RIGHT, fill=tk.BOTH)
-    quiz_frame.pack_propagate(False)
+    lower_pane.add(chart_outer, minsize=760)
+    lower_pane.add(quiz_frame, minsize=340)
 
-    fig = Figure(figsize=(11.2, 5.8), dpi=96)
+    fig = Figure(figsize=(12.4, 6.2), dpi=96)
     ax = fig.add_subplot(111)
     fig.subplots_adjust(left=0.08, right=0.98, bottom=0.16, top=0.92)
     chart_canvas_widget = FigureCanvasTkAgg(fig, master=chart_outer)
     chart_canvas_widget.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def set_initial_lower_split():
+        window.update_idletasks()
+        total_width = lower_pane.winfo_width()
+        if total_width > 0:
+            lower_pane.sash_place(0, int(total_width * 0.72), 0)
+
+    window.after(80, set_initial_lower_split)
 
     window.update_idletasks()
     os.environ["SDL_WINDOWID"] = str(pygame_frame.winfo_id())
@@ -271,6 +284,7 @@ def launch_g68(root):
         draw_placement_grid()
         info_label.config(text="Click the mini-grid to place each player.")
 
+    # Automatically adjusts grid dimension inputs if user goes over max limit
     def clamp_dimension_entry(entry_widget):
         value = entry_widget.get().strip()
         if not value:
@@ -412,12 +426,35 @@ def launch_g68(root):
     start_placement()
     narrate_async(narration_text)
 
+    quiz_canvas = tk.Canvas(quiz_frame, highlightthickness=0)
+    quiz_scrollbar = tk.Scrollbar(quiz_frame, orient=tk.VERTICAL, command=quiz_canvas.yview)
+    quiz_canvas.configure(yscrollcommand=quiz_scrollbar.set)
+
+    quiz_canvas.grid(row=0, column=0, sticky="nsew")
+    quiz_scrollbar.grid(row=0, column=1, sticky="ns")
+    quiz_frame.grid_rowconfigure(0, weight=1)
+    quiz_frame.grid_columnconfigure(0, weight=1)
+
+    quiz_content = tk.Frame(quiz_canvas)
+    quiz_window = quiz_canvas.create_window((0, 0), window=quiz_content, anchor="nw")
+
+    def _sync_quiz_scroll(_event=None):
+        quiz_canvas.configure(scrollregion=quiz_canvas.bbox("all"))
+
+    def _stretch_quiz_content(event):
+        quiz_canvas.itemconfigure(quiz_window, width=event.width)
+
+    quiz_content.bind("<Configure>", _sync_quiz_scroll)
+    quiz_canvas.bind("<Configure>", _stretch_quiz_content)
+
+    # ---- Reflection Questions ----
     tk.Label(
-        quiz_frame,
+        quiz_content,
         justify=tk.LEFT,
         anchor="w",
-        wraplength=360,
-    ).grid(row=0, column=0, sticky="ew", pady=(0, 10))
+        wraplength=340,
+        font=("Segoe UI", 10, "bold"),
+    ).grid(row=0, column=0, sticky="ew", pady=(0, 2))
 
     quiz_questions = [
         "Q1: What is the relationship between grid size and average run time for each movement algorithm?",
@@ -426,16 +463,19 @@ def launch_g68(root):
     ]
     for i, q_text in enumerate(quiz_questions):
         tk.Label(
-            quiz_frame,
+            quiz_content,
             text=q_text,
             anchor="w",
             justify=tk.LEFT,
-            wraplength=360,
+            wraplength=340,
             font=("Segoe UI", 11),
         ).grid(
-            row=i + 1, column=0, sticky="ew", pady=(8, 0)
+            row=i + 1,
+            column=0,
+            sticky="ew",
+            pady=(0, 0) if i == 0 else (8, 0),
         )
-    quiz_frame.grid_columnconfigure(0, weight=1)
+    quiz_content.grid_columnconfigure(0, weight=1)
 
 
 if __name__ == "__main__":
