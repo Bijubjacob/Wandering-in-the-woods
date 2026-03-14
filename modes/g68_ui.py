@@ -6,6 +6,7 @@ from src.narrator import narrate_async
 
 
 def launch_g68(root):
+    max_side = 15
 
     window = tk.Toplevel(root)
     window.title("Grades 6-8 Mode")
@@ -41,12 +42,12 @@ def launch_g68(root):
         "Repeat and compare the statistics to evaluate algorithm performance."
     )
 
-    tk.Label(controls_frame, text="Grid Width").grid(row=0, column=0, sticky="w", pady=(0, 2))
+    tk.Label(controls_frame, text="Grid Width (max 15)").grid(row=0, column=0, sticky="w", pady=(0, 2))
     width_entry = tk.Entry(controls_frame)
     width_entry.insert(0, "8")
     width_entry.grid(row=1, column=0, sticky="ew", pady=(0, 8))
 
-    tk.Label(controls_frame, text="Grid Height").grid(row=2, column=0, sticky="w", pady=(0, 2))
+    tk.Label(controls_frame, text="Grid Height (max 15)").grid(row=2, column=0, sticky="w", pady=(0, 2))
     height_entry = tk.Entry(controls_frame)
     height_entry.insert(0, "8")
     height_entry.grid(row=3, column=0, sticky="ew", pady=(0, 8))
@@ -107,8 +108,8 @@ def launch_g68(root):
 
     def get_grid_dimensions():
         try:
-            width = max(1, int(width_entry.get()))
-            height = max(1, int(height_entry.get()))
+            width = min(max_side, max(1, int(width_entry.get())))
+            height = min(max_side, max(1, int(height_entry.get())))
             return width, height
         except ValueError:
             return 8, 8
@@ -215,7 +216,21 @@ def launch_g68(root):
         draw_placement_grid()
         info_label.config(text="Click the mini-grid to place each player.")
 
+    def clamp_dimension_entry(entry_widget):
+        value = entry_widget.get().strip()
+        if not value:
+            return
+        try:
+            dimension = int(value)
+        except ValueError:
+            return
+        if dimension > max_side:
+            entry_widget.delete(0, tk.END)
+            entry_widget.insert(0, str(max_side))
+
     def update_start_fields(_event=None):
+        clamp_dimension_entry(width_entry)
+        clamp_dimension_entry(height_entry)
         active_players = get_player_count()
         if len(start_positions) > active_players:
             del start_positions[active_players:]
@@ -252,6 +267,16 @@ def launch_g68(root):
         if width <= 0 or height <= 0:
             info_label.config(text="Grid width and height must be greater than 0.")
             return
+
+        if width > max_side:
+            width = max_side
+            width_entry.delete(0, tk.END)
+            width_entry.insert(0, str(max_side))
+
+        if height > max_side:
+            height = max_side
+            height_entry.delete(0, tk.END)
+            height_entry.insert(0, str(max_side))
 
         players = max(2, min(players, 4))
         player_entry.delete(0, tk.END)

@@ -7,6 +7,7 @@ from src.narrator import narrate_async
 
 
 def launch_k2(root):
+	max_side = 15
 
 	window = tk.Toplevel(root)
 	window.title("K-2 Mode")
@@ -41,7 +42,7 @@ def launch_k2(root):
 		"Then run the simulation and see how many moves it takes for them to meet."
 	)
 
-	tk.Label(controls_frame, text="Grid Size (NxN)").grid(row=0, column=0, sticky="w", pady=(0, 2))
+	tk.Label(controls_frame, text="Grid Size (NxN, max 15)").grid(row=0, column=0, sticky="w", pady=(0, 2))
 	size_entry = tk.Entry(controls_frame)
 	size_entry.insert(0, "8")
 	size_entry.grid(row=1, column=0, sticky="ew", pady=(0, 8))
@@ -65,6 +66,18 @@ def launch_k2(root):
 		height = max(400, pygame_frame.winfo_height() - 4)
 		return width, height
 
+	def clamp_size_entry(_event=None):
+		value = size_entry.get().strip()
+		if not value:
+			return
+		try:
+			grid_size = int(value)
+		except ValueError:
+			return
+		if grid_size > max_side:
+			size_entry.delete(0, tk.END)
+			size_entry.insert(0, str(max_side))
+
 	def run_simulation():
 		try:
 			grid_size = int(size_entry.get())
@@ -75,6 +88,11 @@ def launch_k2(root):
 		if grid_size < 2:
 			info_label.config(text="Grid size must be at least 2 for opposite-corner starts.")
 			return
+
+		if grid_size > max_side:
+			grid_size = max_side
+			size_entry.delete(0, tk.END)
+			size_entry.insert(0, str(max_side))
 
 		info_label.config(text="")
 
@@ -100,6 +118,9 @@ def launch_k2(root):
 		command=run_simulation,
 	)
 	run_button.grid(row=4, column=0, sticky="ew")
+
+	size_entry.bind("<KeyRelease>", clamp_size_entry)
+	size_entry.bind("<FocusOut>", clamp_size_entry)
 
 	narrate_async(narration_text)
 
