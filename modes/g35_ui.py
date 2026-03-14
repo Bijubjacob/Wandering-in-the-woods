@@ -20,6 +20,7 @@ import tkinter as tk
 import os
 import pygame
 from src.game import Game
+from src.narrator import narrate_async
 
 
 def launch_g35(root):
@@ -44,6 +45,21 @@ def launch_g35(root):
     os.environ["SDL_WINDOWID"] = str(pygame_frame.winfo_id())
     if os.name == "nt":
         os.environ["SDL_VIDEODRIVER"] = "windib"
+
+    instruction_text = (
+        "Instructions:\n"
+        "- Choose grid width, grid height, and number of players (2 to 4).\n"
+        "- Click Choose Starting Positions, then click the mini-grid to place each animal.\n"
+        "- Press Run Simulation to start one trial.\n"
+        "- Run multiple trials to compare shortest, longest, and average meeting times."
+    )
+
+    narration_text = (
+        "Welcome to Grades 3 through 5 mode. "
+        "Choose your grid size and number of players. "
+        "Then place each animal on the mini grid and run the simulation. "
+        "Try multiple runs and compare the meeting time statistics."
+    )
 
     # -----------------------------------------------------------
     # USER INPUT SETTINGS
@@ -73,6 +89,15 @@ def launch_g35(root):
 
     info_label = tk.Label(controls_frame, text="", justify=tk.LEFT, anchor="w", wraplength=260)
     info_label.grid(row=10, column=0, sticky="ew", pady=(0, 8))
+
+    instructions_label = tk.Label(
+        controls_frame,
+        text=instruction_text,
+        justify=tk.LEFT,
+        anchor="w",
+        wraplength=260,
+    )
+    instructions_label.grid(row=11, column=0, sticky="ew", pady=(2, 8))
 
     controls_frame.grid_columnconfigure(0, weight=1)
 
@@ -295,14 +320,14 @@ def launch_g35(root):
         text="Run Simulation",
         command=run_simulation
     )
-    run_button.grid(row=11, column=0, sticky="ew", pady=(4, 6))
+    run_button.grid(row=12, column=0, sticky="ew", pady=(4, 6))
 
     reset_button = tk.Button(
         controls_frame,
         text="Reset Statistics",
         command=lambda: (runs.clear(), update_stats(), info_label.config(text=""))
     )
-    reset_button.grid(row=12, column=0, sticky="ew")
+    reset_button.grid(row=13, column=0, sticky="ew")
 
     place_button = tk.Button(
         controls_frame,
@@ -319,6 +344,7 @@ def launch_g35(root):
     height_entry.bind("<FocusOut>", update_start_fields)
     update_start_fields()
     start_placement()
+    narrate_async(narration_text)
 
 
 # For testing g35 mode independently

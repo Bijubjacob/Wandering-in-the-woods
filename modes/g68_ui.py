@@ -2,6 +2,7 @@ import tkinter as tk
 import os
 import pygame
 from src.game import Game
+from src.narrator import narrate_async
 
 
 def launch_g68(root):
@@ -24,6 +25,21 @@ def launch_g68(root):
     os.environ["SDL_WINDOWID"] = str(pygame_frame.winfo_id())
     if os.name == "nt":
         os.environ["SDL_VIDEODRIVER"] = "windib"
+
+    instruction_text = (
+        "Instructions:\n"
+        "- Choose grid size, player count (2 to 4), and a movement algorithm.\n"
+        "- Click Choose Starting Positions, then place all animals on the mini-grid.\n"
+        "- Press Run Simulation to run one trial with the selected algorithm.\n"
+        "- Repeat runs and compare shortest, longest, and average time in seconds."
+    )
+
+    narration_text = (
+        "Welcome to Grades 6 through 8 mode. "
+        "Set the grid size, number of players, and movement algorithm. "
+        "Place all animals on the mini grid, then run a trial. "
+        "Repeat and compare the statistics to evaluate algorithm performance."
+    )
 
     tk.Label(controls_frame, text="Grid Width").grid(row=0, column=0, sticky="w", pady=(0, 2))
     width_entry = tk.Entry(controls_frame)
@@ -61,6 +77,15 @@ def launch_g68(root):
 
     info_label = tk.Label(controls_frame, text="", justify=tk.LEFT, anchor="w", wraplength=260)
     info_label.grid(row=12, column=0, sticky="ew", pady=(0, 8))
+
+    instructions_label = tk.Label(
+        controls_frame,
+        text=instruction_text,
+        justify=tk.LEFT,
+        anchor="w",
+        wraplength=260,
+    )
+    instructions_label.grid(row=13, column=0, sticky="ew", pady=(2, 8))
 
     controls_frame.grid_columnconfigure(0, weight=1)
 
@@ -270,14 +295,14 @@ def launch_g68(root):
         text="Run Simulation",
         command=run_simulation,
     )
-    run_button.grid(row=13, column=0, sticky="ew", pady=(4, 6))
+    run_button.grid(row=14, column=0, sticky="ew", pady=(4, 6))
 
     reset_button = tk.Button(
         controls_frame,
         text="Reset Statistics",
         command=lambda: (runs.clear(), update_stats(), info_label.config(text="")),
     )
-    reset_button.grid(row=14, column=0, sticky="ew")
+    reset_button.grid(row=15, column=0, sticky="ew")
 
     place_button = tk.Button(
         controls_frame,
@@ -294,6 +319,7 @@ def launch_g68(root):
     height_entry.bind("<FocusOut>", update_start_fields)
     update_start_fields()
     start_placement()
+    narrate_async(narration_text)
 
 
 if __name__ == "__main__":

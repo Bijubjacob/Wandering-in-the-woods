@@ -2,6 +2,7 @@ import tkinter as tk
 import os
 import pygame
 from src.game import Game
+from src.narrator import narrate_async
 
 
 
@@ -26,6 +27,20 @@ def launch_k2(root):
 	if os.name == "nt":
 		os.environ["SDL_VIDEODRIVER"] = "windib"
 
+	instruction_text = (
+		"Instructions:\n"
+		"- A Rabbit and Fox wander the woods in a square grid you choose.\n"
+		"- They start at opposite corners and try to find each other.\n"
+		"- Press Run Simulation to watch them move around the grid.\n"
+		"- Try different grid sizes and compare how long it takes for them to meet."
+	)
+	# Narrator voices this text
+	narration_text = (
+		"Welcome to K through 2 mode. "
+		"Choose a grid size. The rabbit and fox start at opposite corners. "
+		"Then run the simulation and see how many moves it takes for them to meet."
+	)
+
 	tk.Label(controls_frame, text="Grid Size (NxN)").grid(row=0, column=0, sticky="w", pady=(0, 2))
 	size_entry = tk.Entry(controls_frame)
 	size_entry.insert(0, "8")
@@ -35,12 +50,7 @@ def launch_k2(root):
 		controls_frame,
 		justify=tk.LEFT,
 		anchor="w",
-		text=(
-			"K-2 Rules:\n"
-			"- Rabbit & Fox wander the woods\n"
-			"- Start at opposite corners\n"
-			"- No run statistics"
-		),
+		text=instruction_text,
 	)
 	rule_label.grid(row=2, column=0, sticky="ew", pady=(0, 10))
 
@@ -91,7 +101,9 @@ def launch_k2(root):
 	)
 	run_button.grid(row=4, column=0, sticky="ew")
 
+	narrate_async(narration_text)
 
+# For testing mode
 if __name__ == "__main__":
 	root = tk.Tk()
 	root.withdraw()
