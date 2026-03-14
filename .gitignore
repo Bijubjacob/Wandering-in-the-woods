@@ -4,3 +4,8 @@ src/__pycache__/
 *.pyc
 .venv/
 modes/__pycache__/
+
+# PyInstaller outputs
+build/
+dist/
+*.spec
